@@ -1,0 +1,149 @@
+datasource db {
+  provider = "mysql"
+  url      = env("MYSQL_URL")
+  // shadowDatabaseUrl = env("MYSQL_SHADOW_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum AccountStatus {
+  Active
+  Inactive
+  Suspended
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model users {
+  user_id                Int            @id @default(autoincrement())
+  name                   String
+  email                  String         @unique
+  password               String
+  avatar                 String?
+  mobile                 String?
+  refresh_token          String?
+  verify_email           Boolean        @default(false)
+  last_login_date        DateTime?
+  status                 AccountStatus  @default(Active)
+  addresses              address[]
+  shopping_cart          cart_product[]
+  order_history          order[]
+  forgot_password_otp    String?
+  forgot_password_expiry DateTime?
+  role                   Role           @default(USER)
+  created_at             DateTime       @default(now())
+  updated_at             DateTime       @updatedAt
+}
+
+model address {
+  address_id   Int      @id @default(autoincrement())
+  user_id      Int
+  address_line String?
+  city         String?
+  state        String?
+  pincode      String?
+  country      String?
+  mobile       Int?
+  status       Boolean  @default(true)
+  order        order[]
+  users        users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+}
+
+model cart_product {
+  cart_product_id   Int      @id @default(autoincrement())
+  user_id           Int
+  product_id        Int
+  cart_product_name String?
+  quantity          Int      @default(1)
+  users             users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  products          product  @relation(fields: [product_id], references: [product_id], onDelete: Cascade)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+}
+
+model order {
+  order_id         Int          @id @default(autoincrement())
+  user_id          Int
+  item_order_id    String       @unique
+  payment_id       String?
+  payment_status   String?
+  address_id       Int
+  delivery_status  String?
+  sub_total_amount Int?
+  total_amount     Int?
+  invoice_receipt  String?
+  order_items      order_item[]
+  users            users        @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  address          address      @relation(fields: [address_id], references: [address_id], onDelete: Cascade)
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+}
+
+model product {
+  product_id     Int            @id @default(autoincrement())
+  name           String
+  images         image[]
+  categories     category[]
+  sub_categories sub_category[]
+  unit           String?
+  stock          Int?
+  price          Int?
+  discount       Int?
+  description    String?
+  more_details   Json?
+  publish        Boolean        @default(true)
+  order_items    order_item[]
+  cart_product   cart_product[]
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
+}
+
+model order_item {
+  order_item_id Int     @id @default(autoincrement())
+  order_id      Int
+  product_id    Int
+  quantity      Int
+  price         Int
+  discount      Int
+  order         order   @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+  product       product @relation(fields: [product_id], references: [product_id], onDelete: Cascade)
+
+  @@unique([order_id, product_id])
+}
+
+model image {
+  image_id   Int     @id @default(autoincrement())
+  url        String
+  product_id Int
+  product    product @relation(fields: [product_id], references: [product_id], onDelete: Cascade)
+}
+
+model category {
+  category_id     Int          @id @default(autoincrement())
+  name            String?
+  image           String?
+  product_id      Int
+  sub_category_id Int
+  created_at      DateTime     @default(now())
+  update_at       DateTime     @updatedAt
+  product         product      @relation(fields: [product_id], references: [product_id], onDelete: Cascade)
+  sub_category    sub_category @relation(fields: [sub_category_id], references: [sub_category_id], onDelete: Cascade)
+}
+
+model sub_category {
+  sub_category_id Int        @id @default(autoincrement())
+  name            String?
+  image           String?
+  categories      category[]
+  product_id      Int
+  created_at      DateTime   @default(now())
+  update_at       DateTime   @updatedAt
+  product         product    @relation(fields: [product_id], references: [product_id], onDelete: Cascade)
+}
