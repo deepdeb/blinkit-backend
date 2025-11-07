@@ -2,9 +2,7 @@ const jwt = require("jsonwebtoken");
 
 const auth = (req, res, next) => {
     try {
-        const token = req.cookies.accessToken;
-
-        console.log('token>>>', token)
+        const token = req.cookies.accessToken || req?.headers?.authorization?.split(' ')[1];
         if (!token) {
             return res.status(200).json({ message: "Access token missing" });
         }

@@ -343,7 +343,7 @@ exports.resetPassword = async (req, res) => {
 
 exports.refreshAccessToken = async (req, res) => {
     try {
-        const refreshToken = req.cookies.refreshToken || req?.header?.authorization?.split(" ")[1]
+        const refreshToken = req.cookies.refreshToken || req?.headers?.authorization?.split(" ")[1]
 
         if (!refreshToken) {
             return res.status(200).json({ message: "Unauthorized access" })
